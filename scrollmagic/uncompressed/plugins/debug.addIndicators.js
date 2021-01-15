@@ -19,48 +19,56 @@
  * @mixin debug.addIndicators
  */
 (function (root, factory) {
-	if (typeof define === 'function' && define.amd) {
+	if (typeof define === "function" && define.amd) {
 		// AMD. Register as an anonymous module.
-		define(['ScrollMagic'], factory);
-	} else if (typeof exports === 'object') {
+		define(["ScrollMagic"], factory);
+	} else if (typeof exports === "object") {
 		// CommonJS
-		factory(require('scrollmagic'));
+		factory(require("scrollmagic"));
 	} else {
 		// no browser global export needed, just execute
 		factory(root.ScrollMagic || (root.jQuery && root.jQuery.ScrollMagic));
 	}
-}(this, function (ScrollMagic) {
+})(this, function (ScrollMagic) {
 	"use strict";
 	var NAMESPACE = "debug.addIndicators";
 
-	var
-		console = window.console || {},
-		err = Function.prototype.bind.call(console.error || console.log || function () {}, console);
+	var console = window.console || {},
+		err = Function.prototype.bind.call(
+			console.error || console.log || function () {},
+			console
+		);
 	if (!ScrollMagic) {
-		err("(" + NAMESPACE + ") -> ERROR: The ScrollMagic main module could not be found. Please make sure it's loaded before this plugin or use an asynchronous loader like requirejs.");
+		err(
+			"(" +
+			NAMESPACE +
+			") -> ERROR: The ScrollMagic main module could not be found. Please make sure it's loaded before this plugin or use an asynchronous loader like requirejs."
+		);
 	}
 
 	// plugin settings
-	var
-		FONT_SIZE = "0.85em",
+	var FONT_SIZE = "0.85em",
 		ZINDEX = "9999",
 		EDGE_OFFSET = 15; // minimum edge distance, added to indentation
 
 	// overall vars
-	var
-		_util = ScrollMagic._util,
+	var _util = ScrollMagic._util,
 		_autoindex = 0;
 
-
-
 	ScrollMagic.Scene.extend(function () {
-		var
-			Scene = this,
+		var Scene = this,
 			_indicator;
 
 		var log = function () {
-			if (Scene._log) { // not available, when main source minified
-				Array.prototype.splice.call(arguments, 1, 0, "(" + NAMESPACE + ")", "->");
+			if (Scene._log) {
+				// not available, when main source minified
+				Array.prototype.splice.call(
+					arguments,
+					1,
+					0,
+					"(" + NAMESPACE + ")",
+					"->"
+				);
 				Scene._log.apply(this, arguments);
 			}
 		};
@@ -87,15 +95,14 @@
 		 */
 		Scene.addIndicators = function (options) {
 			if (!_indicator) {
-				var
-					DEFAULT_OPTIONS = {
-						name: "",
-						indent: 0,
-						parent: undefined,
-						colorStart: "green",
-						colorEnd: "red",
-						colorTrigger: "blue",
-					};
+				var DEFAULT_OPTIONS = {
+					name: "",
+					indent: 0,
+					parent: undefined,
+					colorStart: "green",
+					colorEnd: "red",
+					colorTrigger: "blue",
+				};
 
 				options = _util.extend({}, DEFAULT_OPTIONS, options);
 
@@ -131,9 +138,7 @@
 			}
 			return Scene;
 		};
-
 	});
-
 
 	/*
 	 * ----------------------------------------------------------------
@@ -142,7 +147,7 @@
 	 */
 	// add option to globally auto-add indicators to scenes
 	/**
-	 * Every ScrollMagic.Controller instance now accepts an additional option.  
+	 * Every ScrollMagic.Controller instance now accepts an additional option.
 	 * See {@link ScrollMagic.Controller} for a complete list of the standard options.
 	 * @memberof! debug.addIndicators#
 	 * @method new ScrollMagic.Controller(options)
@@ -159,24 +164,34 @@
 	ScrollMagic.Controller.addOption("addIndicators", false);
 	// extend Controller
 	ScrollMagic.Controller.extend(function () {
-		var
-			Controller = this,
+		var Controller = this,
 			_info = Controller.info(),
 			_container = _info.container,
 			_isDocument = _info.isDocument,
 			_vertical = _info.vertical,
-			_indicators = { // container for all indicators and methods
-				groups: []
+			_indicators = {
+				// container for all indicators and methods
+				groups: [],
 			};
 
 		var log = function () {
-			if (Controller._log) { // not available, when main source minified
-				Array.prototype.splice.call(arguments, 1, 0, "(" + NAMESPACE + ")", "->");
+			if (Controller._log) {
+				// not available, when main source minified
+				Array.prototype.splice.call(
+					arguments,
+					1,
+					0,
+					"(" + NAMESPACE + ")",
+					"->"
+				);
 				Controller._log.apply(this, arguments);
 			}
 		};
 		if (Controller._indicators) {
-			log(2, "WARNING: Scene already has a property '_indicators', which will be overwritten by plugin.");
+			log(
+				2,
+				"WARNING: Scene already has a property '_indicators', which will be overwritten by plugin."
+			);
 		}
 
 		// add indicators container
@@ -200,36 +215,57 @@
 			_indicators.updateTriggerGroupPositions();
 		};
 
-		_container.addEventListener("resize", handleTriggerPositionChange);
+		_container.addEventListener("resize", handleTriggerPositionChange, {
+			passive: true,
+		});
 		if (!_isDocument) {
-			window.addEventListener("resize", handleTriggerPositionChange);
-			window.addEventListener("scroll", handleTriggerPositionChange);
+			window.addEventListener("resize", handleTriggerPositionChange, {
+				passive: true,
+			});
+			window.addEventListener("scroll", handleTriggerPositionChange, {
+				passive: true,
+			});
 		}
 		// update all related bounds containers
-		_container.addEventListener("resize", handleBoundsPositionChange);
-		_container.addEventListener("scroll", handleBoundsPositionChange);
-
+		_container.addEventListener("resize", handleBoundsPositionChange, {
+			passive: true,
+		});
+		_container.addEventListener("scroll", handleBoundsPositionChange, {
+			passive: true,
+		});
 
 		// updates the position of the bounds container to aligned to the right for vertical containers and to the bottom for horizontal
 		this._indicators.updateBoundsPositions = function (specificIndicator) {
 			var // constant for all bounds
-				groups = specificIndicator ? [_util.extend({}, specificIndicator.triggerGroup, {
-					members: [specificIndicator]
-				})] : // create a group with only one element
+				groups = specificIndicator ?
+				[
+					_util.extend({}, specificIndicator.triggerGroup, {
+						members: [specificIndicator],
+					}),
+				] // create a group with only one element
+				:
 				_indicators.groups, // use all
 				g = groups.length,
 				css = {},
 				paramPos = _vertical ? "left" : "top",
 				paramDimension = _vertical ? "width" : "height",
 				edge = _vertical ?
-				_util.get.scrollLeft(_container) + _util.get.width(_container) - EDGE_OFFSET :
-				_util.get.scrollTop(_container) + _util.get.height(_container) - EDGE_OFFSET,
-				b, triggerSize, group;
-			while (g--) { // group loop
+				_util.get.scrollLeft(_container) +
+				_util.get.width(_container) -
+				EDGE_OFFSET :
+				_util.get.scrollTop(_container) +
+				_util.get.height(_container) -
+				EDGE_OFFSET,
+				b,
+				triggerSize,
+				group;
+			while (g--) {
+				// group loop
 				group = groups[g];
 				b = group.members.length;
 				triggerSize = _util.get[paramDimension](group.element.firstChild);
-				while (b--) { // indicators loop
+				while (b--) {
+					// indicators loop
 					css[paramPos] = edge - triggerSize;
 					_util.css(group.members[b].bounds, css);
 				}
@@ -242,10 +278,12 @@
 				groups = specificGroup ? [specificGroup] : _indicators.groups,
 				i = groups.length,
 				container = _isDocument ? document.body : _container,
-				containerOffset = _isDocument ? {
+				containerOffset = _isDocument ?
+				{
 					top: 0,
 					left: 0
-				} : _util.get.offset(container, true),
+				} :
+				_util.get.offset(container, true),
 				edge = _vertical ?
 				_util.get.width(_container) - EDGE_OFFSET :
 				_util.get.height(_container) - EDGE_OFFSET,
@@ -262,29 +300,34 @@
 				elem = group.element;
 				pos = group.triggerHook * Controller.info("size");
 				elemSize = _util.get[paramDimension](elem.firstChild.firstChild);
-				transform = pos > elemSize ? "translate" + paramTransform + "(-100%)" : "";
+				transform =
+					pos > elemSize ? "translate" + paramTransform + "(-100%)" : "";
 
 				_util.css(elem, {
-					top: containerOffset.top + (_vertical ? pos : edge - group.members[0].options.indent),
-					left: containerOffset.left + (_vertical ? edge - group.members[0].options.indent : pos)
+					top: containerOffset.top +
+						(_vertical ? pos : edge - group.members[0].options.indent),
+					left: containerOffset.left +
+						(_vertical ? edge - group.members[0].options.indent : pos),
 				});
 				_util.css(elem.firstChild.firstChild, {
 					"-ms-transform": transform,
 					"-webkit-transform": transform,
-					"transform": transform
+					transform: transform,
 				});
 			}
 		};
 
 		// updates the label for the group to contain the name, if it only has one member
 		this._indicators.updateTriggerGroupLabel = function (group) {
-			var
-				text = "trigger" + (group.members.length > 1 ? "" : " " + group.members[0].options.name),
+			var text =
+				"trigger" +
+				(group.members.length > 1 ? "" : " " + group.members[0].options.name),
 				elem = group.element.firstChild.firstChild,
 				doUpdate = elem.textContent !== text;
 			if (doUpdate) {
 				elem.textContent = text;
-				if (_vertical) { // bounds position is dependent on text length, so update
+				if (_vertical) {
+					// bounds position is dependent on text length, so update
 					_indicators.updateBoundsPositions();
 				}
 			}
@@ -292,8 +335,11 @@
 
 		// add indicators if global option is set
 		this.addScene = function (newScene) {
-
-			if (this._options.addIndicators && newScene instanceof ScrollMagic.Scene && newScene.controller() === Controller) {
+			if (
+				this._options.addIndicators &&
+				newScene instanceof ScrollMagic.Scene &&
+				newScene.controller() === Controller
+			) {
 				newScene.addIndicators();
 			}
 			// call original destroy method
@@ -302,18 +348,27 @@
 
 		// remove all previously set listeners on destroy
 		this.destroy = function () {
-			_container.removeEventListener("resize", handleTriggerPositionChange);
+			_container.removeEventListener("resize", handleTriggerPositionChange, {
+				passive: true,
+			});
 			if (!_isDocument) {
-				window.removeEventListener("resize", handleTriggerPositionChange);
-				window.removeEventListener("scroll", handleTriggerPositionChange);
+				window.removeEventListener("resize", handleTriggerPositionChange, {
+					passive: true,
+				});
+				window.removeEventListener("scroll", handleTriggerPositionChange, {
+					passive: true,
+				});
 			}
-			_container.removeEventListener("resize", handleBoundsPositionChange);
-			_container.removeEventListener("scroll", handleBoundsPositionChange);
+			_container.removeEventListener("resize", handleBoundsPositionChange, {
+				passive: true,
+			});
+			_container.removeEventListener("scroll", handleBoundsPositionChange, {
+				passive: true,
+			});
 			// call original destroy method
 			this.$super.destroy.apply(this, arguments);
 		};
 		return Controller;
-
 	});
 
 	/*
@@ -322,18 +377,25 @@
 	 * ----------------------------------------------------------------
 	 */
 	var Indicator = function (Scene, options) {
-		var
-			Indicator = this,
+		var Indicator = this,
 			_elemBounds = TPL.bounds(),
 			_elemStart = TPL.start(options.colorStart),
 			_elemEnd = TPL.end(options.colorEnd),
-			_boundsContainer = options.parent && _util.get.elements(options.parent)[0],
+			_boundsContainer =
+			options.parent && _util.get.elements(options.parent)[0],
 			_vertical,
 			_ctrl;
 
 		var log = function () {
-			if (Scene._log) { // not available, when main source minified
-				Array.prototype.splice.call(arguments, 1, 0, "(" + NAMESPACE + ")", "->");
+			if (Scene._log) {
+				// not available, when main source minified
+				Array.prototype.splice.call(
+					arguments,
+					1,
+					0,
+					"(" + NAMESPACE + ")",
+					"->"
+				);
 				Scene._log.apply(this, arguments);
 			}
 		};
@@ -363,7 +425,7 @@
 				// no parent supplied or doesnt exist
 				_boundsContainer = isDocument ? document.body : _ctrl.info("container"); // check if window/document (then use body)
 			}
-			if (!isDocument && _util.css(_boundsContainer, "position") === 'static') {
+			if (!isDocument && _util.css(_boundsContainer, "position") === "static") {
 				// position mode needed for correct positioning of indicators
 				_util.css(_boundsContainer, {
 					position: "relative"
@@ -378,7 +440,8 @@
 			updateTriggerGroup();
 			updateBounds();
 
-			setTimeout(function () { // do after all execution is finished otherwise sometimes size calculations are off
+			setTimeout(function () {
+				// do after all execution is finished otherwise sometimes size calculations are off
 				_ctrl._indicators.updateBoundsPositions(Indicator);
 			}, 0);
 
@@ -387,7 +450,8 @@
 
 		// remove indicators from DOM
 		this.remove = function () {
-			if (Indicator.triggerGroup) { // if not set there's nothing to remove
+			if (Indicator.triggerGroup) {
+				// if not set there's nothing to remove
 				Scene.off("change.plugin_addIndicators", handleTriggerParamsChange);
 				Scene.off("shift.plugin_addIndicators", handleBoundsParamsChange);
 
@@ -439,18 +503,18 @@
 			_util.css(_elemStart.firstChild, {
 				"border-bottom-width": v ? 1 : 0,
 				"border-right-width": v ? 0 : 1,
-				"bottom": v ? -1 : options.indent,
-				"right": v ? options.indent : -1,
-				"padding": v ? "0 8px" : "2px 4px",
+				bottom: v ? -1 : options.indent,
+				right: v ? options.indent : -1,
+				padding: v ? "0 8px" : "2px 4px",
 			});
 			_util.css(_elemEnd, {
 				"border-top-width": v ? 1 : 0,
 				"border-left-width": v ? 0 : 1,
-				"top": v ? "100%" : "",
-				"right": v ? options.indent : "",
-				"bottom": v ? "" : options.indent,
-				"left": v ? "" : "100%",
-				"padding": v ? "0 8px" : "2px 4px"
+				top: v ? "100%" : "",
+				right: v ? options.indent : "",
+				bottom: v ? "" : options.indent,
+				left: v ? "" : "100%",
+				padding: v ? "0 8px" : "2px 4px",
 			});
 			// append
 			_boundsContainer.appendChild(_elemBounds);
@@ -471,7 +535,7 @@
 			css[_vertical ? "height" : "width"] = Scene.duration();
 			_util.css(_elemBounds, css);
 			_util.css(_elemEnd, {
-				display: Scene.duration() > 0 ? "" : "none"
+				display: Scene.duration() > 0 ? "" : "none",
 			});
 		};
 
@@ -489,13 +553,13 @@
 			css[_vertical ? "border-top-width" : "border-left-width"] = 1;
 			_util.css(triggerElem.firstChild, css);
 			_util.css(triggerElem.firstChild.firstChild, {
-				padding: _vertical ? "0 8px 3px 8px" : "3px 4px"
+				padding: _vertical ? "0 8px 3px 8px" : "3px 4px",
 			});
 			document.body.appendChild(triggerElem); // directly add to body
 			var newGroup = {
 				triggerHook: Scene.triggerHook(),
 				element: triggerElem,
-				members: [Indicator]
+				members: [Indicator],
 			};
 			_ctrl._indicators.groups.push(newGroup);
 			Indicator.triggerGroup = newGroup;
@@ -505,13 +569,18 @@
 		};
 
 		var removeTriggerGroup = function () {
-			_ctrl._indicators.groups.splice(_ctrl._indicators.groups.indexOf(Indicator.triggerGroup), 1);
-			Indicator.triggerGroup.element.parentNode.removeChild(Indicator.triggerGroup.element);
+			_ctrl._indicators.groups.splice(
+				_ctrl._indicators.groups.indexOf(Indicator.triggerGroup),
+				1
+			);
+			Indicator.triggerGroup.element.parentNode.removeChild(
+				Indicator.triggerGroup.element
+			);
 			Indicator.triggerGroup = undefined;
 		};
 
 		// updates the trigger group -> either join existing or add new one
-		/*	
+		/*
 		 * Logic:
 		 * 1 if a trigger group exist, check if it's in sync with Scene settings – if so, nothing else needs to happen
 		 * 2 try to find an existing one that matches Scene parameters
@@ -526,21 +595,22 @@
 		 *   C: no, so create a new one
 		 */
 		var updateTriggerGroup = function () {
-			var
-				triggerHook = Scene.triggerHook(),
+			var triggerHook = Scene.triggerHook(),
 				closeEnough = 0.0001;
 
 			// Have a group, check if it still matches
 			if (Indicator.triggerGroup) {
-				if (Math.abs(Indicator.triggerGroup.triggerHook - triggerHook) < closeEnough) {
+				if (
+					Math.abs(Indicator.triggerGroup.triggerHook - triggerHook) <
+					closeEnough
+				) {
 					// _util.log(0, "trigger", options.name, "->", "no need to change, still in sync");
 					return; // all good
 				}
 			}
 			// Don't have a group, check if a matching one exists
 			// _util.log(0, "trigger", options.name, "->", "out of sync!");
-			var
-				groups = _ctrl._indicators.groups,
+			var groups = _ctrl._indicators.groups,
 				group,
 				i = groups.length;
 			while (i--) {
@@ -548,15 +618,22 @@
 				if (Math.abs(group.triggerHook - triggerHook) < closeEnough) {
 					// found a match!
 					// _util.log(0, "trigger", options.name, "->", "found match");
-					if (Indicator.triggerGroup) { // do I have an old group that is out of sync?
-						if (Indicator.triggerGroup.members.length === 1) { // is it the only remaining group?
+					if (Indicator.triggerGroup) {
+						// do I have an old group that is out of sync?
+						if (Indicator.triggerGroup.members.length === 1) {
+							// is it the only remaining group?
 							// _util.log(0, "trigger", options.name, "->", "kill");
 							// was the last member, remove the whole group
 							removeTriggerGroup();
 						} else {
-							Indicator.triggerGroup.members.splice(Indicator.triggerGroup.members.indexOf(Indicator), 1); // just remove from memberlist of old group
+							Indicator.triggerGroup.members.splice(
+								Indicator.triggerGroup.members.indexOf(Indicator),
+								1
+							); // just remove from memberlist of old group
 							_ctrl._indicators.updateTriggerGroupLabel(Indicator.triggerGroup);
-							_ctrl._indicators.updateTriggerGroupPositions(Indicator.triggerGroup);
+							_ctrl._indicators.updateTriggerGroupPositions(
+								Indicator.triggerGroup
+							);
 							// _util.log(0, "trigger", options.name, "->", "removing from previous member list");
 						}
 					}
@@ -578,7 +655,10 @@
 					return;
 				} else {
 					// _util.log(0, "trigger", options.name, "->", "removing from previous member list");
-					Indicator.triggerGroup.members.splice(Indicator.triggerGroup.members.indexOf(Indicator), 1); // just remove from memberlist of old group
+					Indicator.triggerGroup.members.splice(
+						Indicator.triggerGroup.members.indexOf(Indicator),
+						1
+					); // just remove from memberlist of old group
 					_ctrl._indicators.updateTriggerGroupLabel(Indicator.triggerGroup);
 					_ctrl._indicators.updateTriggerGroupPositions(Indicator.triggerGroup);
 					Indicator.triggerGroup = undefined; // need a brand new group...
@@ -606,21 +686,21 @@
 				"border-width": 0,
 				"border-style": "solid",
 				color: color,
-				"border-color": color
+				"border-color": color,
 			});
-			var e = document.createElement('div');
+			var e = document.createElement("div");
 			// wrapper
 			_util.css(e, {
 				position: "absolute",
 				overflow: "visible",
 				width: 0,
-				height: 0
+				height: 0,
 			});
 			e.appendChild(inner);
 			return e;
 		},
 		end: function (color) {
-			var e = document.createElement('div');
+			var e = document.createElement("div");
 			e.textContent = "end";
 			_util.css(e, {
 				position: "absolute",
@@ -628,53 +708,52 @@
 				"border-width": 0,
 				"border-style": "solid",
 				color: color,
-				"border-color": color
+				"border-color": color,
 			});
 			return e;
 		},
 		bounds: function () {
-			var e = document.createElement('div');
+			var e = document.createElement("div");
 			_util.css(e, {
 				position: "absolute",
 				overflow: "visible",
 				"white-space": "nowrap",
 				"pointer-events": "none",
-				"font-size": FONT_SIZE
+				"font-size": FONT_SIZE,
 			});
 			e.style.zIndex = ZINDEX;
 			return e;
 		},
 		trigger: function (color) {
 			// inner to be above or below line but keep position
-			var inner = document.createElement('div');
+			var inner = document.createElement("div");
 			inner.textContent = "trigger";
 			_util.css(inner, {
 				position: "relative",
 			});
 			// inner wrapper for right: 0 and main element has no size
-			var w = document.createElement('div');
+			var w = document.createElement("div");
 			_util.css(w, {
 				position: "absolute",
 				overflow: "visible",
 				"border-width": 0,
 				"border-style": "solid",
 				color: color,
-				"border-color": color
+				"border-color": color,
 			});
 			w.appendChild(inner);
 			// wrapper
-			var e = document.createElement('div');
+			var e = document.createElement("div");
 			_util.css(e, {
 				position: "fixed",
 				overflow: "visible",
 				"white-space": "nowrap",
 				"pointer-events": "none",
-				"font-size": FONT_SIZE
+				"font-size": FONT_SIZE,
 			});
 			e.style.zIndex = ZINDEX;
 			e.appendChild(w);
 			return e;
 		},
 	};
-
-}));
+});
